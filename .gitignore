@@ -32,6 +32,14 @@ dist
 .env.local
 .env.*.local
 
+# User-specific configuration
+.mcp-chrome/
+.mcp-chrome-host
+*.local.json
+
+# User-specific helper scripts (if created locally)
+update-native-host-manifest.sh
+
 # Prevent npm metadata pollution
 false/
 metadata-v1.3/

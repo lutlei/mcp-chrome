@@ -131,7 +131,7 @@ Add the following configuration to your MCP client configuration (using CherrySt
 }
 ```
 
-Replace `YOUR_IP_ADDRESS` with your machine's IP address (e.g., Tailscale IP like `100.121.150.44`).
+Replace `YOUR_IP_ADDRESS` with your machine's IP address (e.g., your Tailscale IP address).
 
 #### Configuring Server Host Binding
 
@@ -145,8 +145,8 @@ After installation, use the provided helper script:
 # Auto-detect and configure Tailscale IP
 mcp-chrome-bridge configure-host --tailscale
 
-# Or set a specific IP
-mcp-chrome-bridge configure-host 100.121.150.44
+# Or set a specific IP (replace with your actual IP)
+mcp-chrome-bridge configure-host YOUR_IP_ADDRESS
 
 # View current configuration
 mcp-chrome-bridge configure-host --info
@@ -162,10 +162,10 @@ Create a config file in your home directory:
 ```bash
 # macOS/Linux
 mkdir -p ~/.mcp-chrome
-echo "100.121.150.44" > ~/.mcp-chrome/host
+echo "YOUR_IP_ADDRESS" > ~/.mcp-chrome/host
 
 # Or in the installation directory
-echo "100.121.150.44" > $(npm list -g mcp-chrome-bridge | grep mcp-chrome-bridge | awk '{print $NF}')/dist/.mcp-chrome-host
+echo "YOUR_IP_ADDRESS" > $(npm list -g mcp-chrome-bridge | grep mcp-chrome-bridge | awk '{print $NF}')/dist/.mcp-chrome-host
 ```
 
 **Option 3: Using environment variable**

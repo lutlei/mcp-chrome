@@ -62,7 +62,7 @@
                 type="text"
                 v-model="remoteHostIp"
                 @input="saveHostPreference"
-                placeholder="e.g., 100.121.150.44"
+                placeholder="e.g., 192.168.1.100 or your Tailscale IP"
                 class="host-input"
               />
               <small class="host-input-hint">Enter your Tailscale IP or network IP</small>
