@@ -18,11 +18,14 @@ export const TIMEOUTS = {
 } as const;
 
 // Server configuration
+// HOST can be set via MCP_CHROME_HOST environment variable
+// For security, bind to specific IP (e.g., Tailscale IP) instead of 0.0.0.0
+// Default: 0.0.0.0 (all interfaces) - change to your Tailscale IP for better security
 export const SERVER_CONFIG = {
-  HOST: '127.0.0.1',
+  HOST: process.env.MCP_CHROME_HOST || '0.0.0.0',
   CORS_ORIGIN: true,
   LOGGER_ENABLED: false,
-} as const;
+};
 
 // HTTP Status codes
 export const HTTP_STATUS = {

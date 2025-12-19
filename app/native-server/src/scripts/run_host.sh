@@ -9,6 +9,25 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 LOG_DIR="${SCRIPT_DIR}/logs"
 mkdir -p "${LOG_DIR}"
 
+# Load MCP_CHROME_HOST from config file if it exists
+# Priority: 1) Config file in script directory, 2) User home config, 3) Environment variable, 4) Default
+MCP_CHROME_HOST="${MCP_CHROME_HOST:-}"
+CONFIG_FILE="${SCRIPT_DIR}/.mcp-chrome-host"
+USER_CONFIG_FILE="${HOME}/.mcp-chrome/host"
+
+if [ -z "${MCP_CHROME_HOST}" ]; then
+    if [ -f "${CONFIG_FILE}" ]; then
+        MCP_CHROME_HOST=$(cat "${CONFIG_FILE}" 2>/dev/null | tr -d '\n\r ' | head -c 50)
+        echo "Loaded MCP_CHROME_HOST from ${CONFIG_FILE}: ${MCP_CHROME_HOST}" >> "${LOG_DIR}/wrapper_config.log" 2>&1 || true
+    elif [ -f "${USER_CONFIG_FILE}" ]; then
+        MCP_CHROME_HOST=$(cat "${USER_CONFIG_FILE}" 2>/dev/null | tr -d '\n\r ' | head -c 50)
+        echo "Loaded MCP_CHROME_HOST from ${USER_CONFIG_FILE}: ${MCP_CHROME_HOST}" >> "${LOG_DIR}/wrapper_config.log" 2>&1 || true
+    fi
+fi
+
+# Export the environment variable for the Node.js process
+export MCP_CHROME_HOST="${MCP_CHROME_HOST:-0.0.0.0}"
+
 # Log rotation
 if [ "${ENABLE_LOG_ROTATION}" = "true" ]; then
     ls -tp "${LOG_DIR}/native_host_wrapper_macos_"* 2>/dev/null | tail -n +$((LOG_RETENTION_COUNT + 1)) | xargs -I {} rm -- {}

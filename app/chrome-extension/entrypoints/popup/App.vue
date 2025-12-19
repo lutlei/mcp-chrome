@@ -37,6 +37,36 @@
                 {{ copyButtonText }}
               </button>
             </div>
+            <div class="mcp-config-host-selector">
+              <label class="host-selector-label">
+                <input
+                  type="radio"
+                  :value="'localhost'"
+                  v-model="mcpHostMode"
+                  @change="saveHostPreference"
+                />
+                <span>Localhost (127.0.0.1)</span>
+              </label>
+              <label class="host-selector-label">
+                <input
+                  type="radio"
+                  :value="'remote'"
+                  v-model="mcpHostMode"
+                  @change="saveHostPreference"
+                />
+                <span>Remote IP</span>
+              </label>
+            </div>
+            <div v-if="mcpHostMode === 'remote'" class="remote-host-input">
+              <input
+                type="text"
+                v-model="remoteHostIp"
+                @input="saveHostPreference"
+                placeholder="e.g., 100.121.150.44"
+                class="host-input"
+              />
+              <small class="host-input-hint">Enter your Tailscale IP or network IP</small>
+            </div>
             <div class="mcp-config-content">
               <pre class="mcp-config-json">{{ mcpConfigJson }}</pre>
             </div>
@@ -218,7 +248,9 @@
           @click="showClearConfirmation = true"
         >
           <TrashIcon />
-          <span>{{ isClearingData ? getMessage('clearingStatus') : getMessage('clearAllDataButton') }}</span>
+          <span>{{
+            isClearingData ? getMessage('clearingStatus') : getMessage('clearAllDataButton')
+          }}</span>
         </button>
       </div>
 
@@ -285,6 +317,8 @@ import {
 const nativeConnectionStatus = ref<'unknown' | 'connected' | 'disconnected'>('unknown');
 const isConnecting = ref(false);
 const nativeServerPort = ref<number>(12306);
+const mcpHostMode = ref<'localhost' | 'remote'>('localhost');
+const remoteHostIp = ref<string>('');
 
 const serverStatus = ref<{
   isRunning: boolean;
@@ -303,11 +337,13 @@ const copyButtonText = ref(getMessage('copyConfigButton'));
 
 const mcpConfigJson = computed(() => {
   const port = serverStatus.value.port || nativeServerPort.value;
+  const host =
+    mcpHostMode.value === 'remote' && remoteHostIp.value ? remoteHostIp.value : '127.0.0.1';
   const config = {
     mcpServers: {
       'streamable-mcp-server': {
         type: 'streamable-http',
-        url: `http://127.0.0.1:${port}/mcp`,
+        url: `http://${host}:${port}/mcp`,
       },
     },
   };
@@ -385,7 +421,9 @@ const getStatusClass = () => {
 const getStatusText = () => {
   if (nativeConnectionStatus.value === 'connected') {
     if (serverStatus.value.isRunning) {
-      return getMessage('serviceRunningStatus', [(serverStatus.value.port || 'Unknown').toString()]);
+      return getMessage('serviceRunningStatus', [
+        (serverStatus.value.port || 'Unknown').toString(),
+      ]);
     } else {
       return getMessage('connectedServiceNotStartedStatus');
     }
@@ -884,6 +922,35 @@ const loadPortPreference = async () => {
   }
 };
 
+const saveHostPreference = async () => {
+  try {
+    // eslint-disable-next-line no-undef
+    await chrome.storage.local.set({
+      mcpHostMode: mcpHostMode.value,
+      remoteHostIp: remoteHostIp.value,
+    });
+    console.log(`Host preference saved: ${mcpHostMode.value}, ${remoteHostIp.value}`);
+  } catch (error) {
+    console.error('Failed to save host preference:', error);
+  }
+};
+
+const loadHostPreference = async () => {
+  try {
+    // eslint-disable-next-line no-undef
+    const result = await chrome.storage.local.get(['mcpHostMode', 'remoteHostIp']);
+    if (result.mcpHostMode) {
+      mcpHostMode.value = result.mcpHostMode;
+    }
+    if (result.remoteHostIp) {
+      remoteHostIp.value = result.remoteHostIp;
+    }
+    console.log(`Host preference loaded: ${mcpHostMode.value}, ${remoteHostIp.value}`);
+  } catch (error) {
+    console.error('Failed to load host preference:', error);
+  }
+};
+
 const saveModelState = async () => {
   try {
     const modelState = {
@@ -1187,6 +1254,7 @@ const setupServerStatusListener = () => {
 
 onMounted(async () => {
   await loadPortPreference();
+  await loadHostPreference();
   await loadModelPreference();
   await checkNativeConnection();
   await checkServerStatus();
@@ -1678,6 +1746,54 @@ onUnmounted(() => {
 .copy-config-button:hover {
   background: #f1f5f9;
   color: #374151;
+}
+
+.mcp-config-host-selector {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+  padding: 8px 0;
+}
+
+.host-selector-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.host-selector-label input[type='radio'] {
+  cursor: pointer;
+}
+
+.remote-host-input {
+  margin-bottom: 12px;
+}
+
+.host-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  background: white;
+  color: #1e293b;
+}
+
+.host-input:focus {
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.host-input-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #94a3b8;
 }
 
 .mcp-config-content {

@@ -188,6 +188,62 @@ program
     }
   });
 
+// Configure host binding
+program
+  .command('configure-host [host]')
+  .description('Configure the MCP server host binding (IP address to listen on)')
+  .option('-i, --info', 'Show current configuration')
+  .option('-r, --reset', 'Reset to default (0.0.0.0)')
+  .option('-t, --tailscale', 'Auto-detect and use Tailscale IP')
+  .option('-l, --local', 'Use localhost only (127.0.0.1)')
+  .option('-g, --global', 'Use all interfaces (0.0.0.0)')
+  .action(async (host: string | undefined, options: any) => {
+    try {
+      const { execSync } = require('child_process');
+      const os = require('os');
+      const configureScriptPath = path.join(__dirname, 'scripts', 'configure-host.sh');
+
+      // Check if script exists
+      if (!fs.existsSync(configureScriptPath)) {
+        console.error(
+          colorText(`Error: configure-host.sh script not found at ${configureScriptPath}`, 'red'),
+        );
+        console.log(
+          colorText('Please ensure the package is properly installed and rebuilt.', 'yellow'),
+        );
+        process.exit(1);
+      }
+
+      // Build command arguments
+      const args: string[] = [];
+      if (options.info) args.push('--info');
+      else if (options.reset) args.push('--reset');
+      else if (options.tailscale) args.push('--tailscale');
+      else if (options.local) args.push('--local');
+      else if (options.global) args.push('--global');
+      else if (host) args.push(host);
+      else {
+        console.error(colorText('Error: Please provide a host IP or use an option flag', 'red'));
+        program.outputHelp();
+        process.exit(1);
+      }
+
+      // Execute the script
+      execSync(`bash "${configureScriptPath}" ${args.join(' ')}`, {
+        stdio: 'inherit',
+        cwd: path.dirname(configureScriptPath),
+      });
+    } catch (error: any) {
+      if (error.status !== undefined) {
+        // Script exited with non-zero code
+        process.exit(error.status);
+      } else {
+        console.error(colorText(`Failed to configure host: ${error.message}`, 'red'));
+        process.exit(1);
+      }
+    }
+  });
+
 program.parse(process.argv);
 
 // If no command provided, show help

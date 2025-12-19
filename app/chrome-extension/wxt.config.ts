@@ -77,6 +77,8 @@ export default defineConfig({
             dest: 'workers',
           },
           {
+            // Copy _locales directory contents (not the directory itself)
+            // This ensures locale files are available when WXT processes the manifest
             src: '_locales/**/*',
             dest: '_locales',
           },

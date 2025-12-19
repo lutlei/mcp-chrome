@@ -78,9 +78,11 @@ console.log('复制包装脚本...');
 const scriptsSourceDir = path.join(__dirname, '.');
 const macOsWrapperSourcePath = path.join(scriptsSourceDir, 'run_host.sh');
 const windowsWrapperSourcePath = path.join(scriptsSourceDir, 'run_host.bat');
+const configureHostScriptPath = path.join(scriptsSourceDir, 'configure-host.sh');
 
 const macOsWrapperDestPath = path.join(distDir, 'run_host.sh');
 const windowsWrapperDestPath = path.join(distDir, 'run_host.bat');
+const configureHostScriptDestPath = path.join(distDir, 'scripts', 'configure-host.sh');
 
 try {
   if (fs.existsSync(macOsWrapperSourcePath)) {
@@ -95,6 +97,16 @@ try {
     console.log(`已将 ${windowsWrapperSourcePath} 复制到 ${windowsWrapperDestPath}`);
   } else {
     console.error(`错误: Windows 包装脚本源文件未找到: ${windowsWrapperSourcePath}`);
+  }
+
+  // Copy configure-host.sh helper script
+  if (fs.existsSync(configureHostScriptPath)) {
+    fs.mkdirSync(path.join(distDir, 'scripts'), { recursive: true });
+    fs.copyFileSync(configureHostScriptPath, configureHostScriptDestPath);
+    fs.chmodSync(configureHostScriptDestPath, '755');
+    console.log(`已将 ${configureHostScriptPath} 复制到 ${configureHostScriptDestPath}`);
+  } else {
+    console.warn(`警告: configure-host.sh 脚本未找到: ${configureHostScriptPath}`);
   }
 } catch (error) {
   console.error('复制包装脚本时出错:', error);

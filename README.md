@@ -6,7 +6,6 @@
 [![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-green.svg)](https://developer.chrome.com/docs/extensions/)
 [![Release](https://img.shields.io/github/v/release/hangwin/mcp-chrome.svg)](https://img.shields.io/github/v/release/hangwin/mcp-chrome.svg)
 
-
 > 🌟 **Turn your Chrome browser into your intelligent assistant** - Let AI take control of your browser, transforming it into a powerful AI-controlled automation tool.
 
 **📖 Documentation**: [English](README.md) | [中文](README_zh.md)
@@ -77,6 +76,20 @@ mcp-chrome-bridge register
 
 > Note: pnpm v7+ disables postinstall scripts by default for security. The `enable-pre-post-scripts` setting controls whether pre/post install scripts run. If automatic registration fails, use the manual registration command above.
 
+3. **Configure host binding (Optional, for remote access)**
+
+If you want to access the server from other machines (e.g., via Tailscale), configure the host IP:
+
+```bash
+# Auto-detect Tailscale IP
+mcp-chrome-bridge configure-host --tailscale
+
+# Or set manually
+mcp-chrome-bridge configure-host YOUR_IP_ADDRESS
+```
+
+See the [Configuration section](#configuring-server-host-binding) below for more options.
+
 3. **Load Chrome Extension**
    - Open Chrome and go to `chrome://extensions/`
    - Enable "Developer mode"
@@ -92,6 +105,8 @@ Add the following configuration to your MCP client configuration (using CherrySt
 
 > Streamable HTTP connection method is recommended
 
+**For local connections:**
+
 ```json
 {
   "mcpServers": {
@@ -102,6 +117,67 @@ Add the following configuration to your MCP client configuration (using CherrySt
   }
 }
 ```
+
+**For remote connections (Tailscale/Network):**
+
+```json
+{
+  "mcpServers": {
+    "chrome-mcp-server": {
+      "type": "streamableHttp",
+      "url": "http://YOUR_IP_ADDRESS:12306/mcp"
+    }
+  }
+}
+```
+
+Replace `YOUR_IP_ADDRESS` with your machine's IP address (e.g., Tailscale IP like `100.121.150.44`).
+
+#### Configuring Server Host Binding
+
+By default, the server listens on `0.0.0.0` (all network interfaces). For better security, you can configure it to bind to a specific IP address (e.g., your Tailscale IP).
+
+**Option 1: Using the helper script (Recommended)**
+
+After installation, use the provided helper script:
+
+```bash
+# Auto-detect and configure Tailscale IP
+mcp-chrome-bridge configure-host --tailscale
+
+# Or set a specific IP
+mcp-chrome-bridge configure-host 100.121.150.44
+
+# View current configuration
+mcp-chrome-bridge configure-host --info
+
+# Reset to default (0.0.0.0)
+mcp-chrome-bridge configure-host --reset
+```
+
+**Option 2: Manual configuration**
+
+Create a config file in your home directory:
+
+```bash
+# macOS/Linux
+mkdir -p ~/.mcp-chrome
+echo "100.121.150.44" > ~/.mcp-chrome/host
+
+# Or in the installation directory
+echo "100.121.150.44" > $(npm list -g mcp-chrome-bridge | grep mcp-chrome-bridge | awk '{print $NF}')/dist/.mcp-chrome-host
+```
+
+**Option 3: Using environment variable**
+
+Set the `MCP_CHROME_HOST` environment variable before starting Chrome (note: this only works if Chrome is launched from a terminal with the variable set).
+
+The configuration is checked in this order:
+
+1. Config file in installation directory: `{install_dir}/.mcp-chrome-host`
+2. User config file: `~/.mcp-chrome/host` (macOS/Linux) or `%USERPROFILE%\.mcp-chrome\host` (Windows)
+3. Environment variable: `MCP_CHROME_HOST`
+4. Default: `0.0.0.0` (all interfaces)
 
 #### Using STDIO Connection (Alternative)
 

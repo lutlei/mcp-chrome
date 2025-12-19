@@ -9,6 +9,24 @@ set "NODE_SCRIPT=%SCRIPT_DIR%\index.js"
 
 if not exist "%LOG_DIR%" md "%LOG_DIR%"
 
+REM Load MCP_CHROME_HOST from config file if it exists
+REM Priority: 1) Config file in script directory, 2) User home config, 3) Environment variable, 4) Default
+set "CONFIG_FILE=%SCRIPT_DIR%\.mcp-chrome-host"
+set "USER_CONFIG_FILE=%USERPROFILE%\.mcp-chrome\host"
+
+if not defined MCP_CHROME_HOST (
+    if exist "%CONFIG_FILE%" (
+        set /p MCP_CHROME_HOST=<"%CONFIG_FILE%"
+        echo Loaded MCP_CHROME_HOST from %CONFIG_FILE%: !MCP_CHROME_HOST! >> "%LOG_DIR%\wrapper_config.log" 2>&1
+    ) else if exist "%USER_CONFIG_FILE%" (
+        set /p MCP_CHROME_HOST=<"%USER_CONFIG_FILE%"
+        echo Loaded MCP_CHROME_HOST from %USER_CONFIG_FILE%: !MCP_CHROME_HOST! >> "%LOG_DIR%\wrapper_config.log" 2>&1
+    )
+)
+
+REM Set default if still not defined
+if not defined MCP_CHROME_HOST set "MCP_CHROME_HOST=0.0.0.0"
+
 REM Generate timestamp
 for /f %%i in ('powershell -NoProfile -Command "Get-Date -Format 'yyyyMMdd_HHmmss'"') do set "TIMESTAMP=%%i"
 set "WRAPPER_LOG=%LOG_DIR%\native_host_wrapper_windows_%TIMESTAMP%.log"
